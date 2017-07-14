@@ -1,15 +1,20 @@
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion 10
-    buildToolsVersion "23.0.0 rc2"
+    compileSdkVersion 25
+    buildToolsVersion '25.0.2'
 
     defaultConfig {
         applicationId "com.dovsnier.dataengine"
-        minSdkVersion 9
+        minSdkVersion 10
         targetSdkVersion 10
         versionCode 1
-        versionName "1.0"
+        versionName "1.0.0"
+        multiDexEnabled true
+
+        ndk {
+            abiFilters 'armeabi', 'armeabi-v7a'
+        }
     }
     buildTypes {
         release {
@@ -17,8 +22,42 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+
+    lintOptions {
+        abortOnError false
+    }
+
+    dexOptions {
+        javaMaxHeapSize "6g"
+        dexInProcess true
+        preDexLibraries true
+        keepRuntimeAnnotatedClasses true
+        jumboMode true
+        threadCount 8
+    }
+
+    aaptOptions {
+        cruncherEnabled = false
+        useNewCruncher = false
+    }
 }
 
 dependencies {
     compile fileTree(include: ['*.jar'], dir: 'libs')
+    compile 'com.dvsnier:baseLib:1.0.1'
+    compile 'com.blankj:utilcode:1.7.0'
+    compile 'com.jakewharton:butterknife:8.7.0'
+    annotationProcessor 'com.jakewharton:butterknife-compiler:8.7.0'
+    compile 'pl.droidsonroids.gif:android-gif-drawable:1.2.7'
+    debugCompile 'com.squareup.leakcanary:leakcanary-android:1.5.1'
+    releaseCompile 'com.squareup.leakcanary:leakcanary-android-no-op:1.5.1'
+    testCompile 'com.squareup.leakcanary:leakcanary-android-no-op:1.5.1'
+}
+
+def gitHashCode() { return 'git rev-parse --short HEAD'.execute([], project.rootDir).text.trim() }
+
+def buildTime() {
+    def date = new Date()
+    def formattedDate = date.format('MMddHHmm')
+    return formattedDate
 }

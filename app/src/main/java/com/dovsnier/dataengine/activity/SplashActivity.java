@@ -1,16 +1,18 @@
-package com.dovsnier.dataengine;
+package com.dovsnier.dataengine.activity;
 
-import android.app.Activity;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
+
+import com.dovsnier.dataengine.R;
+import com.dvsnier.base.BaseActivity;
 
 /**
  * @author DovSnier
  * @version 0.0.1
  * @since 1.7
  */
-public class SplashActivity extends Activity {
+public class SplashActivity extends BaseActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
