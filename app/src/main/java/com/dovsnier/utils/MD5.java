@@ -19,4 +19,8 @@ public class MD5 {
         return value;
     }
 
+    public static String obtainValue(String name, String value) {
+        return obtainValue(name + ":" + value);
+    }
+
 }

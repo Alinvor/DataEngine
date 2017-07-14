@@ -8,5 +8,32 @@ vary: Accept-Encoding
 server: cloudflare-nginx
 cf-ray: 37e306181f880d7f-SJC
 
+Response{protocol=h2, code=200, message=, url=https://cl.chie.pw/index.php}
+
+
+headers = {Headers@4684} "
+date: Fri, 14 Jul 2017 10:06:48 GMT\n
+content-type: text/html\n
+set-cookie: __cfduid=d1b548d6eea26ff228477cf67d607c5541500026808; expires=Sat, 14-Jul-18 10:06:48 GMT; path=/; domain=.chie.pw; HttpOnly\n
+x-powered-by: PHP/5.3.3\n
+vary: Accept-Encoding\n
+server: cloudflare-nginx\n
+cf-ray: 37e3abe1b9f66dcc-SJC\n"
+ namesAndValues = {String[14]@4696}
+  0 = "date"
+  1 = "Fri, 14 Jul 2017 10:06:48 GMT"
+  2 = "content-type"
+  3 = "text/html"
+  4 = "set-cookie"
+  5 = "__cfduid=d1b548d6eea26ff228477cf67d607c5541500026808; expires=Sat, 14-Jul-18 10:06:48 GMT; path=/; domain=.chie.pw; HttpOnly"
+  6 = "x-powered-by"
+  7 = "PHP/5.3.3"
+  8 = "vary"
+  9 = "Accept-Encoding"
+  10 = "server"
+  11 = "cloudflare-nginx"
+  12 = "cf-ray"
+  13 = "37e3abe1b9f66dcc-SJC"
+
 
 

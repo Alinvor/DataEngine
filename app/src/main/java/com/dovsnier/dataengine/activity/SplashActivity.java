@@ -4,12 +4,20 @@ import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import com.dovsnier.controller.EngineManager;
 import com.dovsnier.controller.OkHttpManager;
 import com.dovsnier.dataengine.R;
+import com.dovsnier.dataengine.bean.CookieBean;
+import com.dovsnier.dataengine.bean.HeaderBean;
+import com.dovsnier.dataengine.bean.RequestBean;
 import com.dovsnier.utils.MD5;
 import com.dvsnier.base.BaseActivity;
 import com.dvsnier.cache.CacheManager;
+import com.dvsnier.utils.StringUtils;
+
+import org.xutils.ex.DbException;
 
 import java.io.IOException;
 
@@ -19,6 +27,7 @@ import butterknife.OnClick;
 import butterknife.Unbinder;
 import okhttp3.Call;
 import okhttp3.Callback;
+import okhttp3.Headers;
 import okhttp3.Response;
 
 /**
@@ -31,6 +40,8 @@ public class SplashActivity extends BaseActivity {
     @BindView(R.id.btn)
     TextView btn;
     private Unbinder unbinder;
+    //    String url = "https://www.baidu.com";
+    String url = "https://cl.chie.pw/index.php";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -47,8 +58,7 @@ public class SplashActivity extends BaseActivity {
 
     protected void enqueue1024() {
         showProgressDialog();
-//        String url = "https://www.baidu.com";
-        String url = "https://cl.chie.pw/index.php";
+
 //        OkHttpManager.getInstance().post(url, new BaseBean(), new Callback() {
         OkHttpManager.getInstance().get(url, new Callback() {
             @Override
@@ -57,12 +67,117 @@ public class SplashActivity extends BaseActivity {
             }
 
             @Override
-            public void onResponse(Call call, Response response) throws IOException {
+            public void onResponse(Call call, final Response response) {
                 dismissProgressDialog();
                 if (null != response) {
-                    final String value = response.body().string();
-                    runOnUiThread(value);
+                    try {
+                        String value = response.body().string();
+                        runOnUiThread(value);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    new Thread(new Runnable() {
+                        @Override
+                        public void run() {
+                            saveOrUpdate(response);
+                        }
+                    }).start();
                 }
+            }
+        });
+    }
+
+    protected void saveOrUpdate(Response response) {
+        //                    protected String id;
+//                    protected String url;
+//                    protected String protocol;
+//                    protected int code;
+//                    protected String message;
+//                    protected long sentRequestAtMillis;
+//                    protected long receivedResponseAtMillis;
+//                    protected String foreign;
+//                    protected String remark;
+
+        String url = response.request().url().toString();
+        RequestBean requestBean = new RequestBean();
+        requestBean.setUrl(url);
+        requestBean.setProtocol(response.protocol().name());
+        requestBean.setCode(response.code());
+        requestBean.setMessage(response.message());
+        requestBean.setSentRequestAtMillis(response.sentRequestAtMillis());
+        requestBean.setReceivedResponseAtMillis(response.receivedResponseAtMillis());
+        final String foreign = MD5.obtainValue(url, String.valueOf(System.currentTimeMillis()));
+        requestBean.setForeign(foreign);
+//        try {
+//            requestBean.setRemark(response.body().string());
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
+
+//                    protected String id;
+//                    protected Date date;
+//                    protected String contentType;
+//                    protected String cookie;
+//                    protected String cookieId;
+//                    protected String xPoweredBy;
+//                    protected String vary;
+//                    protected String server;
+//                    protected String cfRay;
+
+        Headers headers = response.headers();
+        HeaderBean headerBean = new HeaderBean();
+        headerBean.setId(foreign);
+        headerBean.setDate(headers.getDate("date"));
+        headerBean.setContentType(headers.get("content-type"));
+        final String cookie = headers.get("set-cookie");
+        headerBean.setCookie(cookie);
+        headerBean.setxPoweredBy(headers.get("x-powered-by"));
+        headerBean.setVary(headers.get("vary"));
+        headerBean.setServer(headers.get("server"));
+        headerBean.setCfRay(headers.get("cf-ray"));
+
+//        __cfduid=d4fbf1c85de8e574f9672b68b81a5febe1500020017;
+// expires=Sat, 14-Jul-18 08:13:37 GMT;
+// path=/;
+// domain=.chie.pw;
+// HttpOnly
+
+        CookieBean cookieBean = new CookieBean();
+        cookieBean.setId(foreign);
+        if (StringUtils.isNotEmpty(cookie)) {
+            String[] split = cookie.split(";");
+            int length = split.length;
+            for (int i = 0; i < length; i++) {
+                if (split[i].contains("=")) {
+                    String[] splitSub = split[i].split("=");
+                    if (splitSub[0].contains("uid")) {
+                        cookieBean.setUid(splitSub[1]);
+                    } else if (splitSub[0].contains("domain")) {
+                        cookieBean.setDomain(splitSub[1]);
+                    } else if (splitSub[0].contains("expires")) {
+                        cookieBean.setExpires(splitSub[1]);
+                    } else if (splitSub[0].contains("path")) {
+                        cookieBean.setPath(splitSub[1]);
+                    } else {
+                        // nothing to do
+                    }
+                } else {
+                    cookieBean.setRemarks(split[i]);
+                }
+            }
+        }
+
+        try {
+            EngineManager.getInstance().getDbManager().saveOrUpdate(requestBean);
+            EngineManager.getInstance().getDbManager().saveOrUpdate(headerBean);
+            EngineManager.getInstance().getDbManager().saveOrUpdate(cookieBean);
+        } catch (DbException e) {
+            e.printStackTrace();
+        }
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                Toast.makeText(SplashActivity.this, "请求成功", Toast.LENGTH_SHORT).show();
             }
         });
     }

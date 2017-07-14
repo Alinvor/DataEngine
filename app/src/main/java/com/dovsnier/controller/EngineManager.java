@@ -3,6 +3,8 @@ package com.dovsnier.controller;
 import com.dvsnier.controller.Manager;
 import com.dvsnier.widget.LifeCycle;
 
+import org.xutils.DbManager;
+
 /**
  * Created by lizw on 2017/7/14.
  */
@@ -28,6 +30,10 @@ public class EngineManager implements LifeCycle {
 
     public void setManager(Manager manager) {
         this.manager = manager;
+    }
+
+    public DbManager getDbManager() {
+        return Manager.getInstance().getDbManager();
     }
 
     @Override
