@@ -1,0 +1,12 @@
+
+#http protocol head
+date: Fri, 14 Jul 2017 08:13:37 GMT
+content-type: text/html
+set-cookie: __cfduid=d4fbf1c85de8e574f9672b68b81a5febe1500020017; expires=Sat, 14-Jul-18 08:13:37 GMT; path=/; domain=.chie.pw; HttpOnly
+x-powered-by: PHP/5.3.3
+vary: Accept-Encoding
+server: cloudflare-nginx
+cf-ray: 37e306181f880d7f-SJC
+
+
+
