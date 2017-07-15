@@ -40,8 +40,9 @@ public class SplashActivity extends BaseActivity {
     @BindView(R.id.btn)
     TextView btn;
     private Unbinder unbinder;
-    //    String url = "https://www.baidu.com";
-    String url = "https://cl.chie.pw/index.php";
+    //    String url = "http://www.baidu.com";
+    String url = "http://cl.chie.pw/index.php";
+    protected String value;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -54,6 +55,8 @@ public class SplashActivity extends BaseActivity {
     protected void onDestroy() {
         super.onDestroy();
         unbinder.unbind();
+        if (null != value)
+            value = null;
     }
 
     protected void enqueue1024() {
@@ -62,8 +65,14 @@ public class SplashActivity extends BaseActivity {
 //        OkHttpManager.getInstance().post(url, new BaseBean(), new Callback() {
         OkHttpManager.getInstance().get(url, new Callback() {
             @Override
-            public void onFailure(Call call, IOException e) {
+            public void onFailure(Call call, final IOException e) {
                 dismissProgressDialog();
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        btn.setText(e.getMessage());
+                    }
+                });
             }
 
             @Override
@@ -71,7 +80,7 @@ public class SplashActivity extends BaseActivity {
                 dismissProgressDialog();
                 if (null != response) {
                     try {
-                        String value = response.body().string();
+                        value = response.body().string();
                         runOnUiThread(value);
                     } catch (IOException e) {
                         e.printStackTrace();
@@ -99,7 +108,7 @@ public class SplashActivity extends BaseActivity {
 //                    protected String remark;
 
         String url = response.request().url().toString();
-        RequestBean requestBean = new RequestBean();
+        RequestBean requestBean = new RequestBean(); //TODO Request information
         requestBean.setUrl(url);
         requestBean.setProtocol(response.protocol().name());
         requestBean.setCode(response.code());
@@ -108,11 +117,10 @@ public class SplashActivity extends BaseActivity {
         requestBean.setReceivedResponseAtMillis(response.receivedResponseAtMillis());
         final String foreign = MD5.obtainValue(url, String.valueOf(System.currentTimeMillis()));
         requestBean.setForeign(foreign);
-//        try {
-//            requestBean.setRemark(response.body().string());
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
+        if (StringUtils.isNotEmpty(value)) {
+//            requestBean.setRemark(String.format("%s", String.valueOf(value.length() / 1024.0f), "kb"));
+            requestBean.setRemark(String.format("%s", value));
+        }
 
 //                    protected String id;
 //                    protected Date date;
@@ -125,8 +133,9 @@ public class SplashActivity extends BaseActivity {
 //                    protected String cfRay;
 
         Headers headers = response.headers();
-        HeaderBean headerBean = new HeaderBean();
+        HeaderBean headerBean = new HeaderBean(); //TODO Header information
         headerBean.setId(foreign);
+        headerBean.setCookieId(foreign);
         headerBean.setDate(headers.getDate("date"));
         headerBean.setContentType(headers.get("content-type"));
         final String cookie = headers.get("set-cookie");
@@ -136,13 +145,13 @@ public class SplashActivity extends BaseActivity {
         headerBean.setServer(headers.get("server"));
         headerBean.setCfRay(headers.get("cf-ray"));
 
-//        __cfduid=d4fbf1c85de8e574f9672b68b81a5febe1500020017;
+// __cfduid=d4fbf1c85de8e574f9672b68b81a5febe1500020017;
 // expires=Sat, 14-Jul-18 08:13:37 GMT;
 // path=/;
 // domain=.chie.pw;
 // HttpOnly
 
-        CookieBean cookieBean = new CookieBean();
+        CookieBean cookieBean = new CookieBean(); // TODO Cookie information
         cookieBean.setId(foreign);
         if (StringUtils.isNotEmpty(cookie)) {
             String[] split = cookie.split(";");
