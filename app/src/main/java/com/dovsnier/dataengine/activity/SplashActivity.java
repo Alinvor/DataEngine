@@ -1,6 +1,7 @@
 package com.dovsnier.dataengine.activity;
 
 import android.os.Bundle;
+import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.TextView;
@@ -15,11 +16,26 @@ import com.dovsnier.dataengine.bean.RequestBean;
 import com.dovsnier.utils.MD5;
 import com.dvsnier.base.BaseActivity;
 import com.dvsnier.cache.CacheManager;
+import com.dvsnier.utils.D;
+import com.dvsnier.utils.LogUtil;
 import com.dvsnier.utils.StringUtils;
 
+import org.htmlparser.Node;
+import org.htmlparser.Parser;
+import org.htmlparser.Remark;
+import org.htmlparser.Tag;
+import org.htmlparser.Text;
+import org.htmlparser.nodes.TagNode;
+import org.htmlparser.nodes.TextNode;
+import org.htmlparser.util.NodeList;
+import org.htmlparser.util.ParserException;
+import org.htmlparser.util.SimpleNodeIterator;
 import org.xutils.ex.DbException;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.util.Locale;
+import java.util.Vector;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -40,8 +56,9 @@ public class SplashActivity extends BaseActivity {
     @BindView(R.id.btn)
     TextView btn;
     private Unbinder unbinder;
-    //    String url = "http://www.baidu.com";
-    String url = "http://cl.chie.pw/index.php";
+    protected final String charset = "UTF-8";
+    String url = "http://www.baidu.com";
+    //    String url = "http://cl.chie.pw/index.php";
     protected String value;
 
     @Override
@@ -60,19 +77,30 @@ public class SplashActivity extends BaseActivity {
     }
 
     protected void enqueue1024() {
-        showProgressDialog();
+        String msg = "请求中...";
+        showProgressDialog(msg);
+        runOnUiThread(msg);
 
-//        OkHttpManager.getInstance().post(url, new BaseBean(), new Callback() {
+//        methodOfHttp();
+
+        methodOfAsset();
+    }
+
+    protected void methodOfAsset() {
+        value = D.hook(this, "http", "test.html");
+        dismissProgressDialog();
+
+        runOnUiThread(value);
+        htmlParse();
+    }
+
+    protected void methodOfHttp() {
+        //        OkHttpManager.getInstance().post(url, new BaseBean(), new Callback() {
         OkHttpManager.getInstance().get(url, new Callback() {
             @Override
             public void onFailure(Call call, final IOException e) {
                 dismissProgressDialog();
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        btn.setText(e.getMessage());
-                    }
-                });
+                runOnUiThread(e.getMessage());
             }
 
             @Override
@@ -119,7 +147,8 @@ public class SplashActivity extends BaseActivity {
         requestBean.setForeign(foreign);
         if (StringUtils.isNotEmpty(value)) {
 //            requestBean.setRemark(String.format("%s", String.valueOf(value.length() / 1024.0f), "kb"));
-            requestBean.setRemark(String.format("%s", value));
+            requestBean.setRemark(String.format(Locale.CHINA, "%s", value));
+            htmlParse();
         }
 
 //                    protected String id;
@@ -182,6 +211,7 @@ public class SplashActivity extends BaseActivity {
             EngineManager.getInstance().getDbManager().saveOrUpdate(cookieBean);
         } catch (DbException e) {
             e.printStackTrace();
+            runOnUiThread(e.getMessage());
         }
         runOnUiThread(new Runnable() {
             @Override
@@ -195,6 +225,7 @@ public class SplashActivity extends BaseActivity {
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
+                btn.setGravity(Gravity.LEFT | Gravity.TOP);
                 btn.setText(value);
                 CacheManager.getInstance().put(MD5.obtainDefaultValue(), value).commit();
             }
@@ -219,12 +250,96 @@ public class SplashActivity extends BaseActivity {
         if (id == R.id.action_settings) {
             return true;
         }
-
         return super.onOptionsItemSelected(item);
     }
 
     @OnClick(R.id.btn)
     public void onViewClicked() {
         enqueue1024();
+    }
+
+    protected void htmlParse() {
+        try {
+            String valueUTF_8 = new String(value.getBytes(charset));
+            Parser parser = Parser.createParser(valueUTF_8, charset);
+            LogUtil.w(TAG, parser.getEncoding());
+            NodeList nodeList = parser.parse(null);
+            handleNode(nodeList);
+        } catch (ParserException e) {
+            e.printStackTrace();
+            runOnUiThread(e.getMessage());
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+            runOnUiThread(e.getMessage());
+        }
+    }
+
+    protected void handleNode(NodeList nodeList) {
+        if (null == nodeList) return;
+        SimpleNodeIterator simpleNodeIterator = nodeList.elements();
+        if (null != simpleNodeIterator) {
+            while (simpleNodeIterator.hasMoreNodes()) {
+                Node node = simpleNodeIterator.nextNode();
+                NodeList nodeChildren = node.getChildren();
+                if (null == nodeChildren) {
+                    LogUtil.d(TAG, "    ");
+                    LogUtil.d(TAG, String.format("->%s", node.getClass().getSimpleName()));
+//                    LogUtil.d(TAG, node.toPlainTextString());
+//                    LogUtil.d(TAG, node.getText());
+                    LogUtil.d(TAG, node.toHtml());
+                    if (node instanceof Tag) {
+                        parseTag((Tag) node);
+                    } else if (node instanceof Text) {
+                        parseText((Text) node);
+                    } else if (node instanceof Remark) {
+                        parseRemark((Remark) node);
+                    } else {
+                        Toast.makeText(this, "notice", Toast.LENGTH_SHORT).show();
+                    }
+                } else {
+                    handleNode(nodeChildren);
+                }
+            }
+        }
+    }
+
+    protected void parseRemark(Remark node) {
+        Remark remark = node;
+        String remarkText = remark.getText();
+    }
+
+    protected void parseText(Text node) {
+        Text text = node;
+        String textText = text.getText();
+        if (text instanceof TextNode) {
+            TextNode textNode = (TextNode) text;
+            String textNodeText = textNode.getText();
+            NodeList textNodeChildren = textNode.getChildren();
+            Node textNodeParent = textNode.getParent();
+            if (null != textNodeParent) {
+                String textNodeParentText = textNodeParent.getText();
+                if (textNodeParent instanceof Tag) {
+                    parseTag((Tag) textNodeParent);
+                }
+            }
+        }
+    }
+
+    protected void parseTag(Tag node) {
+        Tag tag = node;
+        String tagName = tag.getTagName();
+        String rawTagName = tag.getRawTagName();
+        Vector vector = tag.getAttributesEx();
+        if (tag instanceof TagNode) {
+            TagNode tagNode = (TagNode) tag;
+            String tagNodeTagName = tagNode.getTagName();
+            String tagNodeRawTagName = tagNode.getRawTagName();
+            Vector tagNodeAttributesEx = tagNode.getAttributesEx();
+        }
+        StringBuilder sb = new StringBuilder();
+        for (Object item : vector) {
+            sb.append(item);
+        }
+        LogUtil.d(TAG, String.format("TAG: %s,%s,%s", tagName, rawTagName, sb.toString()));
     }
 }
