@@ -25,7 +25,7 @@ import java.util.Vector;
 /**
  * Created by lizw on 2017/7/17.
  */
-
+@Deprecated
 public class HtmlParse implements IHtmlParse, INodeParse, LifeCycle {
 
     protected static final String TAG = HtmlParse.class.getSimpleName();
