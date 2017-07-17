@@ -1,7 +1,9 @@
 package com.dovsnier.dataengine.widget;
 
-import org.htmlparser.Node;
-import org.htmlparser.util.NodeList;
+
+import org.jsoup.nodes.Node;
+
+import java.util.List;
 
 /**
  * Created by lizw on 2017/7/17.
@@ -9,7 +11,7 @@ import org.htmlparser.util.NodeList;
 
 public interface AbstractedNodeParse extends IParse {
 
-    void parseNodeList(NodeList nodeList);
+    void parseNodeList(List<Node> nodeList);
 
     void parseNode(Node node);
 

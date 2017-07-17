@@ -8,7 +8,7 @@ android {
         applicationId "com.dovsnier.dataengine"
         minSdkVersion 10
         targetSdkVersion 25
-        versionCode 3
+        versionCode 4
         versionName "1.0.1"
         multiDexEnabled true
 
@@ -44,7 +44,6 @@ android {
 
 dependencies {
     compile fileTree(include: ['*.jar'], dir: 'libs')
-    compile project(':htmlparse')
     compile 'com.dvsnier:baseLib:1.0.3'
     compile 'com.blankj:utilcode:1.7.0'
     compile('com.jakewharton:butterknife:8.7.0', {
@@ -61,6 +60,7 @@ dependencies {
     debugCompile 'com.squareup.leakcanary:leakcanary-android:1.5.1'
     releaseCompile 'com.squareup.leakcanary:leakcanary-android-no-op:1.5.1'
     testCompile 'com.squareup.leakcanary:leakcanary-android-no-op:1.5.1'
+    compile 'org.jsoup:jsoup:1.10.3'
 }
 
 def gitHashCode() { return 'git rev-parse --short HEAD'.execute([], project.rootDir).text.trim() }

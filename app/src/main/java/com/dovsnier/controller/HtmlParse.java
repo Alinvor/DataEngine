@@ -7,25 +7,24 @@ import com.dvsnier.utils.LogUtil;
 import com.dvsnier.utils.StringUtils;
 import com.dvsnier.widget.LifeCycle;
 
-import org.htmlparser.Node;
-import org.htmlparser.NodeFilter;
-import org.htmlparser.Parser;
-import org.htmlparser.Remark;
-import org.htmlparser.Tag;
-import org.htmlparser.Text;
-import org.htmlparser.nodes.TagNode;
-import org.htmlparser.nodes.TextNode;
-import org.htmlparser.util.NodeList;
-import org.htmlparser.util.ParserException;
-import org.htmlparser.util.SimpleNodeIterator;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Attribute;
+import org.jsoup.nodes.Attributes;
+import org.jsoup.nodes.Comment;
+import org.jsoup.nodes.DataNode;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.DocumentType;
+import org.jsoup.nodes.Element;
+import org.jsoup.nodes.Node;
+import org.jsoup.nodes.TextNode;
 
 import java.io.UnsupportedEncodingException;
-import java.util.Vector;
+import java.util.Iterator;
+import java.util.List;
 
 /**
  * Created by lizw on 2017/7/17.
  */
-@Deprecated
 public class HtmlParse implements IHtmlParse, INodeParse, LifeCycle {
 
     protected static final String TAG = HtmlParse.class.getSimpleName();
@@ -45,40 +44,36 @@ public class HtmlParse implements IHtmlParse, INodeParse, LifeCycle {
 
     @Override
     public void htmlParse() {
-        htmlParse(getValue(), getCharset(), null);
+        htmlParse(getValue(), getCharset());
     }
 
     @Override
     public void htmlParse(String value, String charset) {
-        htmlParse(getValue(), getCharset(), null);
-    }
-
-    @Override
-    public void htmlParse(String value, String charset, NodeFilter filter) {
         if (!StringUtils.isNotEmpty(value)) throw new NullPointerException("value is not empty.");
         try {
             String valueUTF_8 = new String(value.getBytes(StringUtils.isNotEmpty(charset) ? charset : default_charset));
-            Parser parser = Parser.createParser(valueUTF_8, charset);
-            if (isDebug)
-                LogUtil.w(TAG, parser.getEncoding());
-            NodeList nodeList = parser.parse(filter);
-            parseNodeList(nodeList);
-        } catch (ParserException e) {
-            e.printStackTrace();
-            runOnUiThread(e.getMessage());
+            Document document = Jsoup.parse(valueUTF_8);
+            executeParse(document);
         } catch (UnsupportedEncodingException e) {
             e.printStackTrace();
             runOnUiThread(e.getMessage());
         }
     }
 
+    protected void executeParse(Document document) {
+        if (isDebug)
+            LogUtil.w(TAG, String.format("%s", document.charset().displayName()));
+        parseNodeList(document.childNodes());
+    }
+
     @Override
-    public void parseNodeList(NodeList nodeList) {
+    public void parseNodeList(List<Node> nodeList) {
         if (null == nodeList) return;
-        SimpleNodeIterator simpleNodeIterator = nodeList.elements();
-        if (null != simpleNodeIterator) {
-            while (simpleNodeIterator.hasMoreNodes()) {
-                Node node = simpleNodeIterator.nextNode();
+        for (Node node : nodeList) {
+            int childNodeSize = node.childNodeSize();
+            if (childNodeSize > 0) {
+                parseNodeList(node.childNodes());
+            } else {
                 parseNode(node);
             }
         }
@@ -87,71 +82,66 @@ public class HtmlParse implements IHtmlParse, INodeParse, LifeCycle {
     @Override
     public void parseNode(Node node) {
         if (null == node) return;
-        NodeList nodeChildren = node.getChildren();
-        if (null == nodeChildren) {
-            LogUtil.d(TAG, "========================================================================");
-            LogUtil.d(TAG, String.format("->%s,%s,%s", node.getClass().getSimpleName(), node.getText().equals("\n") ? "" : node.getText(), node.toHtml().equals("\n") ? "" : node.toHtml()));
-            if (node instanceof Tag) {
-                parseTag((Tag) node);
-            } else if (node instanceof Text) {
-                parseText((Text) node);
-            } else if (node instanceof Remark) {
-                parseRemark((Remark) node);
-            } else {
-                LogUtil.d(TAG, String.format("->%s,%s", node.getClass().getSimpleName(), "WhiteSpace"));
-                runOnUiThread("notice");
-            }
+        LogUtil.d(TAG, "========================================================================");
+        LogUtil.d(TAG, String.format("nodeName:%-10s,className:%s", node.nodeName(), node.getClass().getSimpleName()));
+        if (node instanceof TextNode) {
+            parseText((TextNode) node);
+        } else if (node instanceof Element) {
+            parseElement((Element) node);
+        } else if (node instanceof DocumentType) {
+            parseDocumentType((DocumentType) node);
+        } else if (node instanceof Comment) {
+            parseComment((Comment) node);
+        } else if (node instanceof DataNode) {
+            parseDataNode((DataNode) node);
         } else {
-            parseNodeList(nodeChildren);
+            LogUtil.d(TAG, String.format("->%s", node.getClass().getSimpleName()));
+            runOnUiThread("notice");
         }
+        parseAttributes(node);
     }
 
     @Override
-    public void parseRemark(Remark node) {
-        Remark remark = node;
-        String remarkText = remark.getText();
-        LogUtil.d(TAG, String.format("Remark: %s", remarkText));
+    public void parseText(TextNode node) {
+        String nodeName = node.nodeName();
+        String wholeText = node.getWholeText();
+    }
+
+    @Override
+    public void parseElement(Element node) {
+        String nodeName = node.nodeName();
+        String tagName = node.tagName();
+    }
+
+    @Override
+    public void parseDocumentType(DocumentType node) {
+        String nodeName = node.nodeName();
 
     }
 
     @Override
-    public void parseText(Text node) {
-        Text text = node;
-        String textText = text.getText();
-        if (text instanceof TextNode) {
-            TextNode textNode = (TextNode) text;
-            String textNodeText = textNode.getText();
-            NodeList textNodeChildren = textNode.getChildren();
-            Node textNodeParent = textNode.getParent();
-            LogUtil.d(TAG, String.format("goto -> TAG: %s", node.getPage().getText(node.getStartPosition(), node.getEndPosition())));
-            if (null != textNodeParent) {
-                String textNodeParentText = textNodeParent.getText();
-                if (textNodeParent instanceof Tag) {
-                    LogUtil.d(TAG, String.format("goto -> TAG: %s", textNodeParent.getClass().getSimpleName()));
-                    parseTag((Tag) textNodeParent);
-                }
+    public void parseComment(Comment node) {
+        String nodeName = node.nodeName();
+    }
+
+    @Override
+    public void parseDataNode(DataNode node) {
+        String nodeName = node.nodeName();
+    }
+
+    @Override
+    public void parseAttributes(Node node) {
+        Attributes attributes = node.attributes();
+        if (null != attributes) {
+            final int size = attributes.size();
+            Iterator<Attribute> iterator = attributes.iterator();
+            while (iterator.hasNext()) {
+                Attribute attribute = iterator.next();
+                String key = attribute.getKey();
+                String value = attribute.getValue();
+                LogUtil.d(TAG, String.format("size:%s,key:%s,value:%s", size, key, value));
             }
         }
-    }
-
-    @Override
-    public void parseTag(Tag node) {
-        Tag tag = node;
-        String tagName = tag.getTagName();
-        String rawTagName = tag.getRawTagName();
-        Vector vector = tag.getAttributesEx();
-        if (tag instanceof TagNode) {
-            TagNode tagNode = (TagNode) tag;
-            String tagNodeTagName = tagNode.getTagName();
-            String tagNodeRawTagName = tagNode.getRawTagName();
-            Vector tagNodeAttributesEx = tagNode.getAttributesEx();
-        }
-        StringBuilder sb = new StringBuilder();
-        for (Object item : vector) {
-            sb.append(item);
-        }
-        LogUtil.d(TAG, String.format("TAG: %s,%s,%s", tagName, rawTagName, sb.toString()));
-        LogUtil.w(TAG, String.format("TAG: %s", node.getPage().getText(node.getStartPosition(), node.getEndPosition())));
     }
 
 

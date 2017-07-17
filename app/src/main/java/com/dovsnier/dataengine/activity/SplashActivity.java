@@ -64,8 +64,8 @@ public class SplashActivity extends BaseActivity {
     protected void onDestroy() {
         super.onDestroy();
         unbinder.unbind();
-        if (null != value)
-            value = null;
+        if (null != value) value = null;
+        if (null != htmlParse) htmlParse.onDestroy();
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH)
             EngineApplication.getInstance().getRefWatcher().watch(this);
     }
@@ -86,6 +86,7 @@ public class SplashActivity extends BaseActivity {
 
         runOnUiThread(value);
         htmlParse.setValue(value);
+        htmlParse.setDebug(true);
         htmlParse.htmlParse();
     }
 
