@@ -1,5 +1,6 @@
 package com.dovsnier.dataengine.activity;
 
+import android.os.Build;
 import android.os.Bundle;
 import android.view.Gravity;
 import android.view.Menu;
@@ -8,8 +9,10 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.dovsnier.controller.EngineManager;
+import com.dovsnier.controller.HtmlParse;
 import com.dovsnier.controller.OkHttpManager;
 import com.dovsnier.dataengine.R;
+import com.dovsnier.dataengine.application.EngineApplication;
 import com.dovsnier.dataengine.bean.CookieBean;
 import com.dovsnier.dataengine.bean.HeaderBean;
 import com.dovsnier.dataengine.bean.RequestBean;
@@ -17,25 +20,12 @@ import com.dovsnier.utils.MD5;
 import com.dvsnier.base.BaseActivity;
 import com.dvsnier.cache.CacheManager;
 import com.dvsnier.utils.D;
-import com.dvsnier.utils.LogUtil;
 import com.dvsnier.utils.StringUtils;
 
-import org.htmlparser.Node;
-import org.htmlparser.Parser;
-import org.htmlparser.Remark;
-import org.htmlparser.Tag;
-import org.htmlparser.Text;
-import org.htmlparser.nodes.TagNode;
-import org.htmlparser.nodes.TextNode;
-import org.htmlparser.util.NodeList;
-import org.htmlparser.util.ParserException;
-import org.htmlparser.util.SimpleNodeIterator;
 import org.xutils.ex.DbException;
 
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.util.Locale;
-import java.util.Vector;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -60,12 +50,14 @@ public class SplashActivity extends BaseActivity {
     String url = "http://www.baidu.com";
     //    String url = "http://cl.chie.pw/index.php";
     protected String value;
+    protected HtmlParse htmlParse;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_splash);
         unbinder = ButterKnife.bind(this);
+        htmlParse = new HtmlParse();
     }
 
     @Override
@@ -74,6 +66,8 @@ public class SplashActivity extends BaseActivity {
         unbinder.unbind();
         if (null != value)
             value = null;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH)
+            EngineApplication.getInstance().getRefWatcher().watch(this);
     }
 
     protected void enqueue1024() {
@@ -91,7 +85,8 @@ public class SplashActivity extends BaseActivity {
         dismissProgressDialog();
 
         runOnUiThread(value);
-        htmlParse();
+        htmlParse.setValue(value);
+        htmlParse.htmlParse();
     }
 
     protected void methodOfHttp() {
@@ -148,7 +143,7 @@ public class SplashActivity extends BaseActivity {
         if (StringUtils.isNotEmpty(value)) {
 //            requestBean.setRemark(String.format("%s", String.valueOf(value.length() / 1024.0f), "kb"));
             requestBean.setRemark(String.format(Locale.CHINA, "%s", value));
-            htmlParse();
+            htmlParse.htmlParse();
         }
 
 //                    protected String id;
@@ -248,6 +243,7 @@ public class SplashActivity extends BaseActivity {
 
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
+            Toast.makeText(this, "setting", Toast.LENGTH_SHORT).show();
             return true;
         }
         return super.onOptionsItemSelected(item);
@@ -258,88 +254,5 @@ public class SplashActivity extends BaseActivity {
         enqueue1024();
     }
 
-    protected void htmlParse() {
-        try {
-            String valueUTF_8 = new String(value.getBytes(charset));
-            Parser parser = Parser.createParser(valueUTF_8, charset);
-            LogUtil.w(TAG, parser.getEncoding());
-            NodeList nodeList = parser.parse(null);
-            handleNode(nodeList);
-        } catch (ParserException e) {
-            e.printStackTrace();
-            runOnUiThread(e.getMessage());
-        } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
-            runOnUiThread(e.getMessage());
-        }
-    }
 
-    protected void handleNode(NodeList nodeList) {
-        if (null == nodeList) return;
-        SimpleNodeIterator simpleNodeIterator = nodeList.elements();
-        if (null != simpleNodeIterator) {
-            while (simpleNodeIterator.hasMoreNodes()) {
-                Node node = simpleNodeIterator.nextNode();
-                NodeList nodeChildren = node.getChildren();
-                if (null == nodeChildren) {
-                    LogUtil.d(TAG, "    ");
-                    LogUtil.d(TAG, String.format("->%s", node.getClass().getSimpleName()));
-//                    LogUtil.d(TAG, node.toPlainTextString());
-//                    LogUtil.d(TAG, node.getText());
-                    LogUtil.d(TAG, node.toHtml());
-                    if (node instanceof Tag) {
-                        parseTag((Tag) node);
-                    } else if (node instanceof Text) {
-                        parseText((Text) node);
-                    } else if (node instanceof Remark) {
-                        parseRemark((Remark) node);
-                    } else {
-                        Toast.makeText(this, "notice", Toast.LENGTH_SHORT).show();
-                    }
-                } else {
-                    handleNode(nodeChildren);
-                }
-            }
-        }
-    }
-
-    protected void parseRemark(Remark node) {
-        Remark remark = node;
-        String remarkText = remark.getText();
-    }
-
-    protected void parseText(Text node) {
-        Text text = node;
-        String textText = text.getText();
-        if (text instanceof TextNode) {
-            TextNode textNode = (TextNode) text;
-            String textNodeText = textNode.getText();
-            NodeList textNodeChildren = textNode.getChildren();
-            Node textNodeParent = textNode.getParent();
-            if (null != textNodeParent) {
-                String textNodeParentText = textNodeParent.getText();
-                if (textNodeParent instanceof Tag) {
-                    parseTag((Tag) textNodeParent);
-                }
-            }
-        }
-    }
-
-    protected void parseTag(Tag node) {
-        Tag tag = node;
-        String tagName = tag.getTagName();
-        String rawTagName = tag.getRawTagName();
-        Vector vector = tag.getAttributesEx();
-        if (tag instanceof TagNode) {
-            TagNode tagNode = (TagNode) tag;
-            String tagNodeTagName = tagNode.getTagName();
-            String tagNodeRawTagName = tagNode.getRawTagName();
-            Vector tagNodeAttributesEx = tagNode.getAttributesEx();
-        }
-        StringBuilder sb = new StringBuilder();
-        for (Object item : vector) {
-            sb.append(item);
-        }
-        LogUtil.d(TAG, String.format("TAG: %s,%s,%s", tagName, rawTagName, sb.toString()));
-    }
 }
