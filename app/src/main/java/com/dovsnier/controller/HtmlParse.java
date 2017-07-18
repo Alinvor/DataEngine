@@ -1,11 +1,9 @@
 package com.dovsnier.controller;
 
-import com.dovsnier.dataengine.component.UiThreadListener;
 import com.dovsnier.dataengine.widget.IDocumentParse;
 import com.dovsnier.dataengine.widget.INodeParse;
 import com.dvsnier.utils.LogUtil;
 import com.dvsnier.utils.StringUtils;
-import com.dvsnier.widget.LifeCycle;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Attribute;
@@ -25,13 +23,10 @@ import java.util.List;
 /**
  * Created by lizw on 2017/7/17.
  */
-public class HtmlParse implements IDocumentParse, INodeParse, LifeCycle {
+public class HtmlParse extends Html implements IDocumentParse, INodeParse {
 
-    protected static final String TAG = HtmlParse.class.getSimpleName();
-    protected boolean isDebug;
     protected String value;
     protected String charset;
-    protected UiThreadListener uiThreadListener;
     protected String default_charset = "UTF-8";
 
     public HtmlParse() {
@@ -154,30 +149,17 @@ public class HtmlParse implements IDocumentParse, INodeParse, LifeCycle {
                 Attribute attribute = iterator.next();
                 String key = attribute.getKey();
                 String value = attribute.getValue();
-                LogUtil.d(TAG, String.format("size:%s,key:%s,value:%s", size, key, value));
+                if (isDebug)
+                    LogUtil.d(TAG, String.format("attribute(size):%-3s,key:%-10s,value:%s", size, key, value));
             }
         }
     }
 
-
-    protected void runOnUiThread(String msg) {
-        if (null != uiThreadListener)
-            uiThreadListener.runOnUiThread(msg);
-    }
-
     @Override
     public void onDestroy() {
+        super.onDestroy();
         if (null != value) value = null;
         if (null != charset) charset = null;
-        if (null != uiThreadListener) uiThreadListener = null;
-    }
-
-    public boolean isDebug() {
-        return isDebug;
-    }
-
-    public void setDebug(boolean debug) {
-        isDebug = debug;
     }
 
     public String getValue() {
@@ -196,11 +178,4 @@ public class HtmlParse implements IDocumentParse, INodeParse, LifeCycle {
         this.charset = charset;
     }
 
-    public UiThreadListener getUiThreadListener() {
-        return uiThreadListener;
-    }
-
-    public void setUiThreadListener(UiThreadListener uiThreadListener) {
-        this.uiThreadListener = uiThreadListener;
-    }
 }

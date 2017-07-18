@@ -1,7 +1,5 @@
 package com.dovsnier.dataengine.bean;
 
-import com.dvsnier.bean.BaseBean;
-
 import org.xutils.db.annotation.Column;
 import org.xutils.db.annotation.Table;
 
@@ -9,7 +7,7 @@ import org.xutils.db.annotation.Table;
  * Created by lizw on 2017/7/14.
  */
 @Table(name = "body_info")
-public class BodyBean extends BaseBean {
+public class BodyBean extends AbstractNodeBean {
 
     @Column(name = "id", isId = true, autoGen = true)
     protected int id;
@@ -17,19 +15,12 @@ public class BodyBean extends BaseBean {
     protected String identifier;
     @Column(name = "foreign")
     protected String foreign;
-    @Column(name = "position")
-    protected long position;
     @Column(name = "body")
     protected String body;
     @Column(name = "content")
     protected String content;
     @Column(name = "charset")
     protected String charset;
-    @Column(name = "isDelete")
-    protected boolean isDelete;
-    @Column(name = "invalid")
-    protected boolean invalid;
-
 
     public int getId() {
         return id;
@@ -55,14 +46,6 @@ public class BodyBean extends BaseBean {
         this.foreign = foreign;
     }
 
-    public long getPosition() {
-        return position;
-    }
-
-    public void setPosition(long position) {
-        this.position = position;
-    }
-
     public String getBody() {
         return body;
     }
@@ -85,21 +68,5 @@ public class BodyBean extends BaseBean {
 
     public void setCharset(String charset) {
         this.charset = charset;
-    }
-
-    public boolean isDelete() {
-        return isDelete;
-    }
-
-    public void setDelete(boolean delete) {
-        isDelete = delete;
-    }
-
-    public boolean isInvalid() {
-        return invalid;
-    }
-
-    public void setInvalid(boolean invalid) {
-        this.invalid = invalid;
     }
 }

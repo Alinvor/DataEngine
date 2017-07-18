@@ -1,0 +1,16 @@
+#持久化(Persistence)-继承结构
+-BaseBean
+    -MetaBean
+    +AbstractNodeBean
+        -NodeBean
+        -HeadBean
+        -BodyBean
+        -AttributeBean
+    +RequestBean
+        +HeaderBean
+            -CookieBean
+        +NodeBean
+            +HeadBean
+                -AttributeBean
+            +BodyBean
+                -AttributeBean
