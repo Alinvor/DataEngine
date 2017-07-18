@@ -6,4 +6,6 @@ package com.dovsnier.dataengine.component;
 
 public interface IPersistence {
 
+    String generateConversationIdentifier();
+
 }
