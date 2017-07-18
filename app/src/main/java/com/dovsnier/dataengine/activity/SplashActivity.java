@@ -8,24 +8,17 @@ import android.view.MenuItem;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.dovsnier.controller.EngineManager;
 import com.dovsnier.controller.HtmlParse;
+import com.dovsnier.controller.HttpParse;
 import com.dovsnier.controller.OkHttpManager;
 import com.dovsnier.dataengine.R;
 import com.dovsnier.dataengine.application.EngineApplication;
-import com.dovsnier.dataengine.bean.CookieBean;
-import com.dovsnier.dataengine.bean.HeaderBean;
-import com.dovsnier.dataengine.bean.RequestBean;
 import com.dovsnier.utils.MD5;
 import com.dvsnier.base.BaseActivity;
 import com.dvsnier.cache.CacheManager;
 import com.dvsnier.utils.D;
-import com.dvsnier.utils.StringUtils;
-
-import org.xutils.ex.DbException;
 
 import java.io.IOException;
-import java.util.Locale;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -33,7 +26,6 @@ import butterknife.OnClick;
 import butterknife.Unbinder;
 import okhttp3.Call;
 import okhttp3.Callback;
-import okhttp3.Headers;
 import okhttp3.Response;
 
 /**
@@ -46,10 +38,12 @@ public class SplashActivity extends BaseActivity {
     @BindView(R.id.btn)
     TextView btn;
     private Unbinder unbinder;
-    protected final String charset = "UTF-8";
     String url = "http://www.baidu.com";
     //    String url = "http://cl.chie.pw/index.php";
     protected String value;
+    protected boolean isDebug = true;
+    protected int strategy;
+    protected HttpParse httpParse;
     protected HtmlParse htmlParse;
 
     @Override
@@ -57,7 +51,7 @@ public class SplashActivity extends BaseActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_splash);
         unbinder = ButterKnife.bind(this);
-        htmlParse = new HtmlParse();
+        strategy = 1;
     }
 
     @Override
@@ -65,6 +59,7 @@ public class SplashActivity extends BaseActivity {
         super.onDestroy();
         unbinder.unbind();
         if (null != value) value = null;
+        if (null != httpParse) httpParse.onDestroy();
         if (null != htmlParse) htmlParse.onDestroy();
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH)
             EngineApplication.getInstance().getRefWatcher().watch(this);
@@ -75,22 +70,46 @@ public class SplashActivity extends BaseActivity {
         showProgressDialog(msg);
         runOnUiThread(msg);
 
-//        methodOfHttp();
-
-        methodOfAsset();
+        switch (strategy) {
+            case 1:
+                methodOfAsset();
+                break;
+            case 2:
+                methodOfHttp();
+                break;
+        }
     }
 
     protected void methodOfAsset() {
+        if (null == htmlParse) {
+            htmlParse = new HtmlParse();
+            htmlParse.setDebug(isDebug);
+        }
+
         value = D.hook(this, "http", "test.html");
         dismissProgressDialog();
 
         runOnUiThread(value);
+        htmlParse();
+    }
+
+    protected void htmlParse() {
         htmlParse.setValue(value);
-        htmlParse.setDebug(true);
         htmlParse.htmlParse();
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                Toast.makeText(SplashActivity.this, "请求成功", Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
     protected void methodOfHttp() {
+        if (null == httpParse) {
+            httpParse = new HttpParse();
+            httpParse.setDebug(isDebug);
+        }
+
         //        OkHttpManager.getInstance().post(url, new BaseBean(), new Callback() {
         OkHttpManager.getInstance().get(url, new Callback() {
             @Override
@@ -112,7 +131,7 @@ public class SplashActivity extends BaseActivity {
                     new Thread(new Runnable() {
                         @Override
                         public void run() {
-                            saveOrUpdate(response);
+                            httpParse(response);
                         }
                     }).start();
                 }
@@ -120,95 +139,8 @@ public class SplashActivity extends BaseActivity {
         });
     }
 
-    protected void saveOrUpdate(Response response) {
-        //                    protected String id;
-//                    protected String url;
-//                    protected String protocol;
-//                    protected int code;
-//                    protected String message;
-//                    protected long sentRequestAtMillis;
-//                    protected long receivedResponseAtMillis;
-//                    protected String foreign;
-//                    protected String remark;
-
-        String url = response.request().url().toString();
-        RequestBean requestBean = new RequestBean(); //TODO Request information
-        requestBean.setUrl(url);
-        requestBean.setProtocol(response.protocol().name());
-        requestBean.setCode(response.code());
-        requestBean.setMessage(response.message());
-        requestBean.setSentRequestAtMillis(response.sentRequestAtMillis());
-        requestBean.setReceivedResponseAtMillis(response.receivedResponseAtMillis());
-        final String foreign = MD5.obtainValue(url, String.valueOf(System.currentTimeMillis()));
-        requestBean.setForeign(foreign);
-        if (StringUtils.isNotEmpty(value)) {
-//            requestBean.setRemark(String.format("%s", String.valueOf(value.length() / 1024.0f), "kb"));
-            requestBean.setRemark(String.format(Locale.CHINA, "%s", value));
-            htmlParse.htmlParse();
-        }
-
-//                    protected String id;
-//                    protected Date date;
-//                    protected String contentType;
-//                    protected String cookie;
-//                    protected String cookieId;
-//                    protected String xPoweredBy;
-//                    protected String vary;
-//                    protected String server;
-//                    protected String cfRay;
-
-        Headers headers = response.headers();
-        HeaderBean headerBean = new HeaderBean(); //TODO Header information
-        headerBean.setId(foreign);
-        headerBean.setCookieId(foreign);
-        headerBean.setDate(headers.getDate("date"));
-        headerBean.setContentType(headers.get("content-type"));
-        final String cookie = headers.get("set-cookie");
-        headerBean.setCookie(cookie);
-        headerBean.setxPoweredBy(headers.get("x-powered-by"));
-        headerBean.setVary(headers.get("vary"));
-        headerBean.setServer(headers.get("server"));
-        headerBean.setCfRay(headers.get("cf-ray"));
-
-// __cfduid=d4fbf1c85de8e574f9672b68b81a5febe1500020017;
-// expires=Sat, 14-Jul-18 08:13:37 GMT;
-// path=/;
-// domain=.chie.pw;
-// HttpOnly
-
-        CookieBean cookieBean = new CookieBean(); // TODO Cookie information
-        cookieBean.setId(foreign);
-        if (StringUtils.isNotEmpty(cookie)) {
-            String[] split = cookie.split(";");
-            int length = split.length;
-            for (int i = 0; i < length; i++) {
-                if (split[i].contains("=")) {
-                    String[] splitSub = split[i].split("=");
-                    if (splitSub[0].contains("uid")) {
-                        cookieBean.setUid(splitSub[1]);
-                    } else if (splitSub[0].contains("domain")) {
-                        cookieBean.setDomain(splitSub[1]);
-                    } else if (splitSub[0].contains("expires")) {
-                        cookieBean.setExpires(splitSub[1]);
-                    } else if (splitSub[0].contains("path")) {
-                        cookieBean.setPath(splitSub[1]);
-                    } else {
-                        // nothing to do
-                    }
-                } else {
-                    cookieBean.setRemarks(split[i]);
-                }
-            }
-        }
-
-        try {
-            EngineManager.getInstance().getDbManager().saveOrUpdate(requestBean);
-            EngineManager.getInstance().getDbManager().saveOrUpdate(headerBean);
-            EngineManager.getInstance().getDbManager().saveOrUpdate(cookieBean);
-        } catch (DbException e) {
-            e.printStackTrace();
-            runOnUiThread(e.getMessage());
-        }
+    protected void httpParse(Response response) {
+        httpParse.parseHttp(response);
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
@@ -254,6 +186,4 @@ public class SplashActivity extends BaseActivity {
     public void onViewClicked() {
         enqueue1024();
     }
-
-
 }

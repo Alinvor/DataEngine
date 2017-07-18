@@ -14,3 +14,6 @@
                 -AttributeBean
             +BodyBean
                 -AttributeBean
+
+#说明
+    -先有http,后有document文档对象,此处我们采用反转策略;
