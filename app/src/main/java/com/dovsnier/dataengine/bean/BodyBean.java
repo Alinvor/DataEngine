@@ -19,8 +19,6 @@ public class BodyBean extends AbstractNodeBean {
     protected String body;
     @Column(name = "content")
     protected String content;
-    @Column(name = "charset")
-    protected String charset;
 
     public int getId() {
         return id;
@@ -60,13 +58,5 @@ public class BodyBean extends AbstractNodeBean {
 
     public void setContent(String content) {
         this.content = content;
-    }
-
-    public String getCharset() {
-        return charset;
-    }
-
-    public void setCharset(String charset) {
-        this.charset = charset;
     }
 }

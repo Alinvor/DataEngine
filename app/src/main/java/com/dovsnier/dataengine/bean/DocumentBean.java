@@ -6,8 +6,8 @@ import org.xutils.db.annotation.Table;
 /**
  * Created by lizw on 2017/7/17.
  */
-@Table(name = "node_info")
-public class NodeBean extends AbstractNodeBean {
+@Table(name = "document_info")
+public class DocumentBean extends AbstractNodeBean {
 
     @Column(name = "id", isId = true, autoGen = true)
     protected String id;

@@ -15,17 +15,38 @@ public class HeadBean extends AbstractNodeBean {
     protected String identifier;
     @Column(name = "foreign")
     protected String foreign;
-    @Column(name = "position")
-    protected long position;
-    @Column(name = "body")
-    protected String body;
-    @Column(name = "content")
-    protected String content;
     @Column(name = "charset")
     protected String charset;
-    @Column(name = "isDelete")
-    protected boolean isDelete;
-    @Column(name = "invalid")
-    protected boolean invalid;
 
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
+
+    public String getIdentifier() {
+        return identifier;
+    }
+
+    public void setIdentifier(String identifier) {
+        this.identifier = identifier;
+    }
+
+    public String getForeign() {
+        return foreign;
+    }
+
+    public void setForeign(String foreign) {
+        this.foreign = foreign;
+    }
+
+    public String getCharset() {
+        return charset;
+    }
+
+    public void setCharset(String charset) {
+        this.charset = charset;
+    }
 }
