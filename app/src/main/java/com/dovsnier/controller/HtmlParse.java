@@ -1,7 +1,7 @@
 package com.dovsnier.controller;
 
 import com.dovsnier.dataengine.component.UiThreadListener;
-import com.dovsnier.dataengine.widget.IHtmlParse;
+import com.dovsnier.dataengine.widget.IDocumentParse;
 import com.dovsnier.dataengine.widget.INodeParse;
 import com.dvsnier.utils.LogUtil;
 import com.dvsnier.utils.StringUtils;
@@ -25,7 +25,7 @@ import java.util.List;
 /**
  * Created by lizw on 2017/7/17.
  */
-public class HtmlParse implements IHtmlParse, INodeParse, LifeCycle {
+public class HtmlParse implements IDocumentParse, INodeParse, LifeCycle {
 
     protected static final String TAG = HtmlParse.class.getSimpleName();
     protected boolean isDebug;
@@ -63,7 +63,22 @@ public class HtmlParse implements IHtmlParse, INodeParse, LifeCycle {
     protected void executeParse(Document document) {
         if (isDebug)
             LogUtil.w(TAG, String.format("%s", document.charset().displayName()));
-        parseNodeList(document.childNodes());
+        Element head = document.head();
+        parseHead(head);
+        Element body = document.body();
+        parseBody(body);
+    }
+
+    @Override
+    public void parseHead(Element head) {
+        parseAttributes(head);
+        parseNodeList(head.childNodes());
+    }
+
+    @Override
+    public void parseBody(Element body) {
+        parseAttributes(body);
+        parseNodeList(body.childNodes());
     }
 
     @Override
