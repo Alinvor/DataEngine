@@ -5,7 +5,6 @@ import com.dvsnier.widget.LifeCycle;
 /**
  * Created by lizw on 2017/7/18.
  */
-
 public abstract class Document implements LifeCycle {
 
     protected final String TAG = this.getClass().getSimpleName();
@@ -13,6 +12,7 @@ public abstract class Document implements LifeCycle {
 
     @Override
     public void onDestroy() {
+        if (isDebug()) isDebug = false;
     }
 
     public boolean isDebug() {
