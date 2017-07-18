@@ -13,6 +13,10 @@ public class MD5 {
         return obtainValue(String.valueOf(System.currentTimeMillis()));
     }
 
+    public static String obtainDefaultValue(String value) {
+        return obtainValue(String.valueOf(System.currentTimeMillis()) + ":" + value);
+    }
+
     public static String obtainValue(String value) {
         if (StringUtils.isNotEmpty(value))
             return EncryptUtils.encryptMD5ToString(value);
