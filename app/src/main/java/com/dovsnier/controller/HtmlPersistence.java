@@ -1,6 +1,7 @@
 package com.dovsnier.controller;
 
-import com.dovsnier.dataengine.component.INodePersistence;
+import com.dovsnier.dataengine.component.IHtmlPersistence;
+import com.dovsnier.dataengine.component.IHttpPersistence;
 import com.dovsnier.utils.MD5;
 import com.dvsnier.utils.StringUtils;
 
@@ -8,7 +9,7 @@ import com.dvsnier.utils.StringUtils;
  * Created by lizw on 2017/7/18.
  */
 
-public class HtmlPersistence extends Html implements INodePersistence {
+public class HtmlPersistence extends Html implements IHttpPersistence, IHtmlPersistence {
 
     protected String conversationIdentifier;
     protected String nodeIdentifier;
@@ -52,6 +53,8 @@ public class HtmlPersistence extends Html implements INodePersistence {
     }
 
     public String getConversationIdentifier() {
+        if (null == conversationIdentifier)
+            conversationIdentifier = generateConversationIdentifier();
         return conversationIdentifier;
     }
 
