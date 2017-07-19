@@ -1,6 +1,5 @@
 package com.dovsnier.dataengine.activity;
 
-import android.os.Build;
 import android.os.Bundle;
 import android.view.Gravity;
 import android.view.Menu;
@@ -12,7 +11,6 @@ import com.dovsnier.controller.HtmlParse;
 import com.dovsnier.controller.HttpParse;
 import com.dovsnier.controller.OkHttpManager;
 import com.dovsnier.dataengine.R;
-import com.dovsnier.dataengine.application.EngineApplication;
 import com.dovsnier.utils.MD5;
 import com.dvsnier.base.BaseActivity;
 import com.dvsnier.cache.CacheManager;
@@ -61,8 +59,6 @@ public class SplashActivity extends BaseActivity {
         if (null != value) value = null;
         if (null != httpParse) httpParse.onDestroy();
         if (null != htmlParse) htmlParse.onDestroy();
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH)
-            EngineApplication.getInstance().getRefWatcher().watch(this);
     }
 
     protected void enqueue1024() {
