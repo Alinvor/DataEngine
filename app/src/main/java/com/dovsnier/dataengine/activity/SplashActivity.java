@@ -11,6 +11,7 @@ import com.dovsnier.controller.HtmlParse;
 import com.dovsnier.controller.HttpParse;
 import com.dovsnier.controller.OkHttpManager;
 import com.dovsnier.dataengine.R;
+import com.dovsnier.dataengine.component.UiThreadListener;
 import com.dovsnier.utils.MD5;
 import com.dvsnier.base.BaseActivity;
 import com.dvsnier.cache.CacheManager;
@@ -31,25 +32,23 @@ import okhttp3.Response;
  * @version 0.0.1
  * @since 1.7
  */
-public class SplashActivity extends BaseActivity {
+public class SplashActivity extends BaseActivity implements UiThreadListener {
 
     @BindView(R.id.btn)
     TextView btn;
     private Unbinder unbinder;
-    String url = "http://www.baidu.com";
-    //    String url = "http://cl.chie.pw/index.php";
     protected String value;
     protected boolean isDebug = true;
     protected int strategy;
     protected HttpParse httpParse;
     protected HtmlParse htmlParse;
+    protected double random;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_splash);
         unbinder = ButterKnife.bind(this);
-        strategy = 1;
     }
 
     @Override
@@ -67,10 +66,10 @@ public class SplashActivity extends BaseActivity {
         runOnUiThread(msg);
 
         switch (strategy) {
-            case 1:
+            case 0:
                 methodOfAsset();
                 break;
-            case 2:
+            case 1:
                 methodOfHttp();
                 break;
         }
@@ -80,6 +79,7 @@ public class SplashActivity extends BaseActivity {
         if (null == htmlParse) {
             htmlParse = new HtmlParse();
             htmlParse.setDebug(isDebug);
+            htmlParse.setUiThreadListener(this);
         }
 
         value = D.hook(this, "http", "test.html");
@@ -104,6 +104,15 @@ public class SplashActivity extends BaseActivity {
         if (null == httpParse) {
             httpParse = new HttpParse();
             httpParse.setDebug(isDebug);
+            httpParse.setUiThreadListener(this);
+        }
+        String url;
+
+        double radomUrl = Math.random() * 100;
+        if (radomUrl > 50.0d) {
+            url = "http://www.baidu.com";
+        } else {
+            url = "http://cl.chie.pw/index.php";
         }
 
         //        OkHttpManager.getInstance().post(url, new BaseBean(), new Callback() {
@@ -118,12 +127,6 @@ public class SplashActivity extends BaseActivity {
             public void onResponse(Call call, final Response response) {
                 dismissProgressDialog();
                 if (null != response) {
-                    try {
-                        value = response.body().string();
-                        runOnUiThread(value);
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
                     new Thread(new Runnable() {
                         @Override
                         public void run() {
@@ -145,7 +148,8 @@ public class SplashActivity extends BaseActivity {
         });
     }
 
-    protected void runOnUiThread(final String value) {
+    @Override
+    public void runOnUiThread(final String value) {
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
@@ -180,6 +184,12 @@ public class SplashActivity extends BaseActivity {
 
     @OnClick(R.id.btn)
     public void onViewClicked() {
+        random = Math.random() * 100;
+        if (random > 50.0d) {
+            strategy = 0;
+        } else {
+            strategy = 1;
+        }
         enqueue1024();
     }
 }
