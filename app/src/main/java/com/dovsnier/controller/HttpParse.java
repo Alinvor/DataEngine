@@ -45,6 +45,7 @@ public class HttpParse extends Html implements IHttpParse {
         adapter = new HttpAdapter();
         try {
             value = response.body().string();
+            runOnUiThread(value);
         } catch (IOException e) {
             e.printStackTrace();
             error(TAG, e);
