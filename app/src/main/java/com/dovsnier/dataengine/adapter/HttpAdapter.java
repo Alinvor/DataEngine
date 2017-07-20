@@ -65,12 +65,14 @@ public class HttpAdapter extends AbstractAdapter implements LifeCycle, IHttpPers
     public void saveBody(BodyBean bean) {
         if (null != persistence)
             persistence.saveBody(bean);
+        if (null != htmlParse)
+            htmlParse.htmlParse();
     }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
-        if (null == htmlParse) htmlParse.onDestroy();
+        if (null != htmlParse) htmlParse.onDestroy();
         if (null != persistence) persistence.onDestroy();
     }
 

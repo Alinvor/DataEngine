@@ -1,5 +1,6 @@
 package com.dovsnier.controller;
 
+import com.dovsnier.dataengine.adapter.HtmlAdapter;
 import com.dovsnier.dataengine.widget.IDocumentParse;
 import com.dovsnier.dataengine.widget.INodeParse;
 import com.dvsnier.utils.LogUtil;
@@ -28,6 +29,7 @@ public class HtmlParse extends Html implements IDocumentParse, INodeParse {
     protected String value;
     protected String charset;
     protected String default_charset = "UTF-8";
+    protected HtmlAdapter htmlAdapter;
 
     public HtmlParse() {
     }
@@ -45,6 +47,7 @@ public class HtmlParse extends Html implements IDocumentParse, INodeParse {
     @Override
     public void htmlParse(String value, String charset) {
         if (!StringUtils.isNotEmpty(value)) throw new NullPointerException("value is not empty.");
+        htmlAdapter = new HtmlAdapter();
         try {
             String valueUTF_8 = new String(value.getBytes(StringUtils.isNotEmpty(charset) ? charset : default_charset));
             Document document = Jsoup.parse(valueUTF_8);

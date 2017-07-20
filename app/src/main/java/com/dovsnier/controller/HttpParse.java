@@ -1,9 +1,11 @@
 package com.dovsnier.controller;
 
 import com.dovsnier.dataengine.adapter.HttpAdapter;
+import com.dovsnier.dataengine.bean.BodyBean;
 import com.dovsnier.dataengine.bean.CookieBean;
 import com.dovsnier.dataengine.bean.HeaderBean;
 import com.dovsnier.dataengine.bean.RequestBean;
+import com.dovsnier.dataengine.widget.DocumentType;
 import com.dovsnier.dataengine.widget.IHttpParse;
 import com.dvsnier.utils.StringUtils;
 
@@ -58,14 +60,14 @@ public class HttpParse extends Html implements IHttpParse {
         requestBean.setMessage(response.message());
         requestBean.setSentRequestAtMillis(response.sentRequestAtMillis());
         requestBean.setReceivedResponseAtMillis(response.receivedResponseAtMillis());
-        final String foreign = adapter.getPersistence().generateConversationIdentifier();
+        final String foreign = adapter.generateConversationIdentifier();
         requestBean.setForeign(foreign);
-        if (StringUtils.isNotEmpty(value)) {
+//        if (StringUtils.isNotEmpty(value)) {
 //            requestBean.setRemark(String.format("%s", String.valueOf(value.length() / 1024.0f), "kb"));
-            requestBean.setRemark(String.format(Locale.CHINA, "%s", value));
-        } else {
-            warning("the current value is null.");
-        }
+//            requestBean.setRemark(String.format(Locale.CHINA, "%s", value));
+//        } else {
+//            warning("the current value is null.");
+//        }
         adapter.saveRequest(requestBean);
 
 //
@@ -117,6 +119,7 @@ public class HttpParse extends Html implements IHttpParse {
                         cookieBean.setPath(splitSub[1]);
                     } else {
                         // nothing to do
+                        debug(split[i]);
                     }
                 } else {
                     cookieBean.setRemarks(split[i]);
@@ -124,6 +127,21 @@ public class HttpParse extends Html implements IHttpParse {
             }
         }
         adapter.saveCookie(cookieBean);
+
+        BodyBean bodyBean = new BodyBean(); // TODO Body information
+        bodyBean.setIdentifier(foreign);
+        bodyBean.setBody(adapter.generateIdentifier(foreign));
+        bodyBean.setForeign(adapter.generateForeign(foreign));
+        if (StringUtils.isNotEmpty(value)) {
+            bodyBean.setContent(String.format(Locale.CHINA, "%s", value));
+        } else {
+            warning("the current value is null.");
+        }
+        bodyBean.setName("response_body");
+        bodyBean.setType(DocumentType.DOCUMENT.name());
+        bodyBean.setPosition(0L);
+        bodyBean.setIndex(0L);
+        adapter.saveBody(bodyBean);
     }
 
     @Override
