@@ -1,9 +1,11 @@
 package com.dovsnier.dataengine.adapter;
 
+import com.dovsnier.controller.EngineManager;
 import com.dovsnier.controller.HtmlPersistence;
 import com.dovsnier.dataengine.bean.AttributeBean;
 import com.dovsnier.dataengine.bean.DocumentBean;
 import com.dovsnier.dataengine.component.IHtmlPersistence;
+import com.dvsnier.utils.StringUtils;
 import com.dvsnier.widget.LifeCycle;
 
 /**
@@ -78,5 +80,35 @@ public class HtmlAdapter extends AbstractAdapter implements LifeCycle, IHtmlPers
     public void setDebug(boolean debug) {
         super.setDebug(debug);
         if (null != persistence) persistence.setDebug(debug);
+    }
+
+    public String setConversationIdentifier() {
+        String conversationIdentifier = EngineManager.getInstance().getConversationIdentifier();
+        if (null == conversationIdentifier) {
+            conversationIdentifier = generateConversationIdentifier();
+            EngineManager.getInstance().setConversationIdentifier(conversationIdentifier);
+            debug(String.format("the current conversationIdentifier is  %s", conversationIdentifier));
+        }
+        persistence.setConversationIdentifier(conversationIdentifier);
+        return conversationIdentifier;
+    }
+
+    public String setNodeIdentifier(String conversationIdentifier, String nodeIdentifier) {
+        if (!StringUtils.isNotEmpty(conversationIdentifier))
+            throw new NullPointerException("conversationIdentifier cannot be null.");
+        String generateIdentifier = null;
+        if (null == nodeIdentifier) {
+            generateIdentifier = generateIdentifier(conversationIdentifier);
+            debug(String.format("the current nodeIdentifier is  %s", generateIdentifier));
+        } else {
+            generateIdentifier = nodeIdentifier;
+        }
+        persistence.setNodeIdentifier(generateIdentifier);
+        return generateIdentifier;
+    }
+
+    public void setNodeForeign(String nodeIdentifier) {
+        if (!StringUtils.isNotEmpty(nodeIdentifier)) throw new NullPointerException("nodeIdentifier cannot be null.");
+        persistence.setNodeForeign(generateForeign(nodeIdentifier));
     }
 }

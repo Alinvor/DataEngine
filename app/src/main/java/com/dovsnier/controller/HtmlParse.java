@@ -30,8 +30,13 @@ public class HtmlParse extends Html implements IDocumentParse, INodeParse {
     protected String charset;
     protected String default_charset = "UTF-8";
     protected HtmlAdapter htmlAdapter;
+    protected String nodeIdentifier;
 
     public HtmlParse() {
+    }
+
+    public HtmlParse(String nodeIdentifier) {
+        this.nodeIdentifier = nodeIdentifier;
     }
 
     public HtmlParse(String value, String charset) {
@@ -48,6 +53,7 @@ public class HtmlParse extends Html implements IDocumentParse, INodeParse {
     public void htmlParse(String value, String charset) {
         if (!StringUtils.isNotEmpty(value)) throw new NullPointerException("value is not empty.");
         htmlAdapter = new HtmlAdapter();
+        setNodeIdentifier(nodeIdentifier);
         try {
             String valueUTF_8 = new String(value.getBytes(StringUtils.isNotEmpty(charset) ? charset : default_charset));
             Document document = Jsoup.parse(valueUTF_8);
@@ -163,6 +169,8 @@ public class HtmlParse extends Html implements IDocumentParse, INodeParse {
         super.onDestroy();
         if (null != value) value = null;
         if (null != charset) charset = null;
+        if (null != nodeIdentifier) nodeIdentifier = null;
+        if (null != htmlAdapter) htmlAdapter.onDestroy();
     }
 
     public String getValue() {
@@ -181,4 +189,26 @@ public class HtmlParse extends Html implements IDocumentParse, INodeParse {
         this.charset = charset;
     }
 
+    public HtmlAdapter getHtmlAdapter() {
+        return htmlAdapter;
+    }
+
+    public void setHtmlAdapter(HtmlAdapter htmlAdapter) {
+        this.htmlAdapter = htmlAdapter;
+    }
+
+    public String getNodeIdentifier() {
+        return nodeIdentifier;
+    }
+
+    public void setNodeIdentifier(String nodeIdentifier) {
+        if (StringUtils.isNotEmpty(nodeIdentifier)) {
+            if (null == this.nodeIdentifier || !nodeIdentifier.equals(this.nodeIdentifier))
+                this.nodeIdentifier = nodeIdentifier;
+        }
+        if (null != htmlAdapter) {
+            this.nodeIdentifier = htmlAdapter.setNodeIdentifier(htmlAdapter.setConversationIdentifier(), getNodeIdentifier());
+            htmlAdapter.setNodeForeign(getNodeIdentifier());
+        }
+    }
 }
