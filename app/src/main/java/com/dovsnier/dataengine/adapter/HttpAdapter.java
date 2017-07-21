@@ -14,18 +14,17 @@ import com.dvsnier.widget.LifeCycle;
  */
 public class HttpAdapter extends AbstractAdapter implements LifeCycle, IHttpPersistence {
 
-    protected HtmlParse htmlParse;
     protected HttpPersistence persistence;
+    protected HtmlParse htmlParse;
 
     public HttpAdapter() {
         if (null == persistence) persistence = new HttpPersistence();
     }
 
-    public HttpAdapter(HtmlParse htmlParse, HttpPersistence persistence) {
+
+    public HttpAdapter(HtmlParse htmlParse) {
         this.htmlParse = htmlParse;
-        this.persistence = persistence;
 //        if (null == htmlParse) throw new NullPointerException("htmlParse can not be null.");
-//        if (null == persistence) throw new NullPointerException("persistence can not be null.");
     }
 
     @Override
@@ -65,23 +64,18 @@ public class HttpAdapter extends AbstractAdapter implements LifeCycle, IHttpPers
     public void saveBody(BodyBean bean) {
         if (null != persistence)
             persistence.saveBody(bean);
-        if (null != htmlParse)
-            htmlParse.htmlParse();
+        if (null == htmlParse) {
+            htmlParse = new HtmlParse(bean.getForeign());
+        }
+        htmlParse.htmlParse();
     }
+
 
     @Override
     public void onDestroy() {
         super.onDestroy();
-        if (null != htmlParse) htmlParse.onDestroy();
         if (null != persistence) persistence.onDestroy();
-    }
-
-    public HtmlParse getHtmlParse() {
-        return htmlParse;
-    }
-
-    public void setHtmlParse(HtmlParse htmlParse) {
-        this.htmlParse = htmlParse;
+        if (null != htmlParse) htmlParse.onDestroy();
     }
 
     public HttpPersistence getPersistence() {
@@ -90,6 +84,14 @@ public class HttpAdapter extends AbstractAdapter implements LifeCycle, IHttpPers
 
     public void setPersistence(HttpPersistence persistence) {
         this.persistence = persistence;
+    }
+
+    public HtmlParse getHtmlParse() {
+        return htmlParse;
+    }
+
+    public void setHtmlParse(HtmlParse htmlParse) {
+        this.htmlParse = htmlParse;
     }
 
     @Override

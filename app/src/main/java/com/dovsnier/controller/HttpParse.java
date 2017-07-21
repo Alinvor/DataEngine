@@ -61,6 +61,7 @@ public class HttpParse extends Html implements IHttpParse {
         requestBean.setSentRequestAtMillis(response.sentRequestAtMillis());
         requestBean.setReceivedResponseAtMillis(response.receivedResponseAtMillis());
         final String foreign = adapter.generateConversationIdentifier();
+        EngineManager.getInstance().setConversationIdentifier(foreign);
         requestBean.setForeign(foreign);
 //        if (StringUtils.isNotEmpty(value)) {
 //            requestBean.setRemark(String.format("%s", String.valueOf(value.length() / 1024.0f), "kb"));
