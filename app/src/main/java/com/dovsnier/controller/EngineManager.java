@@ -8,7 +8,8 @@ import com.dvsnier.controller.Manager;
 
 public class EngineManager extends Manager {
 
-    private static final String TAG = EngineManager.class.getSimpleName();
+    protected static final String TAG = EngineManager.class.getSimpleName();
+    protected String conversationIdentifier;
     private static final EngineManager instance = new EngineManager();
 
     protected EngineManager() {
@@ -21,5 +22,14 @@ public class EngineManager extends Manager {
     @Override
     public void onDestroy() {
         super.onDestroy();
+        if (null != conversationIdentifier) conversationIdentifier = null;
+    }
+
+    public String getConversationIdentifier() {
+        return conversationIdentifier;
+    }
+
+    public void setConversationIdentifier(String conversationIdentifier) {
+        this.conversationIdentifier = conversationIdentifier;
     }
 }
