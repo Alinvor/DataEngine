@@ -44,6 +44,12 @@ public class HtmlParse extends Html implements IDocumentParse, INodeParse {
         this.charset = charset;
     }
 
+    public HtmlParse(String nodeIdentifier, String value, String charset) {
+        this.nodeIdentifier = nodeIdentifier;
+        this.value = value;
+        this.charset = charset;
+    }
+
     @Override
     public void htmlParse() {
         htmlParse(getValue(), getCharset());

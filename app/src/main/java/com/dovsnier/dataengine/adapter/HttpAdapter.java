@@ -65,7 +65,9 @@ public class HttpAdapter extends AbstractAdapter implements LifeCycle, IHttpPers
         if (null != persistence)
             persistence.saveBody(bean);
         if (null == htmlParse) {
-            htmlParse = new HtmlParse(bean.getForeign());
+            htmlParse = new HtmlParse(bean.getContent(), bean.getForeign(), null);
+        } else {
+            htmlParse.setValue(bean.getContent());
         }
         htmlParse.htmlParse();
     }
