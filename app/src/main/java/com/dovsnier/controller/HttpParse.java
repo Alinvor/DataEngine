@@ -46,7 +46,9 @@ public class HttpParse extends Html implements IHttpParse {
         }
         adapter = new HttpAdapter();
         try {
-            value = response.body().string();
+            byte[] b = response.body().bytes(); //获取数据的bytes
+            value = new String(b, "GB2312"); //然后将其转为gb2312
+//            value = response.body().string();
             runOnUiThread(value);
         } catch (IOException e) {
             e.printStackTrace();
